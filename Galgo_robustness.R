@@ -3,13 +3,14 @@
 load("/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_BRCA.rda")
 downl=names(esets)
 
+##Galgo Hyperparameters
 
-library(a4Base)
-
-Comb=combineTwoExpressionSet(esets[[1]],esets[[2]])
-for(i in 3:length(downl)){
-  Comb=combineTwoExpressionSet(Comb,esets[[i]])
-}
+population= 300                   #Number of individuals to evaluate
+generations=500                 #Number of generations
+nCV=5                             #Number of crossvalidations for function "crossvalidation"
+GPU= TRUE                         # to use gpuR
+TournamentSize=2
+period=5475
 
 
 set.seed(2003)

@@ -55,20 +55,86 @@ reshapeClinic= function(clinic)  {
 }
 
 
-#Expression tidy
-
-expressiontidy=function(Expression,ANNOT){
-  require(illuminaio)
+#Expression set tidy for METABRIC and OSLO
+expressiontidy2= function(Expression,ANNOT, CLINIC, SURV,BATCH){
+  #require(illuminaio)
   require(AnnotationDbi)
-  require(limma)
+  #require(limma)
+  
+  CLINIC$ER.Expr= gsub("\\+", "positive", CLINIC$ER.Expr)
+  CLINIC$ER.Expr= gsub("\\-", "negative", CLINIC$ER.Expr)
+  CLINIC$PR.Expr= gsub("\\+", "positive", CLINIC$PR.Expr)
+  CLINIC$PR.Expr= gsub("\\-", "negative", CLINIC$PR.Expr)
+  CLINIC$Her2.Expr= gsub("\\+", "positive", CLINIC$Her2.Expr)
+  CLINIC$Her2.Expr= gsub("\\-", "negative", CLINIC$Her2.Expr)
+  SURV[,2]= gsub("1", "deceased", SURV[,2])
+  SURV[,2]= gsub("0", "living", SURV[,2])
+  pData= data.frame(
+  row.names= make.names(rownames(CLINIC)),
+  sample_name= make.names(rownames(CLINIC)),
+  alt_sample_name= NA,
+  unique_patient_ID= NA,
+  sample_type= "tumor",
+  er= CLINIC$ER.Expr,
+  pgr= CLINIC$PR.Expr,
+  her2= CLINIC$Her2.Expr,
+  tumor_size= CLINIC$size/10,
+  T=NA,
+  N=NA,
+  age_at_initial_pathologic_diagnosis= CLINIC$age_at_diagnosis,
+  grade=CLINIC$grade,
+  dmfs_days=NA,
+  dmfs_status=NA,
+  days_to_tumor_recurrence=NA,
+  recurrence_status=NA,
+  days_to_death=SURV[,1],
+  vital_status=SURV[,2],
+  tissue=NA,
+  treatment=CLINIC$Treatment,
+  percent_normal_cells=NA,
+  percent_stromal_cells=NA,
+  percent_tumor_cells=NA,
+  batch=BATCH,
+  uncurated_author_metadata=NA,
+  duplicates=NA)
   probes=rownames(Expression)
   ANNOT=ANNOT$probe[ANNOT$probe[,"Probe_Id"] %in% probes,]
   ANNOT= ANNOT[!is.na(ANNOT$Entrez_Gene_ID),]
   Expression=Expression[ANNOT[,"Probe_Id"],]
-  Expression=avereps(Expression,ID=ANNOT[,"Entrez_Gene_ID"])
+  fData= data.frame(probeset=ANNOT$Probe_Id,gene=ANNOT$Symbol, EntrezGene.ID=ANNOT$Entrez_Gene_ID,best_probe=TRUE,row.names=ANNOT$Probe_Id)
   colnames(Expression)=make.names(colnames(Expression))
-  return(Expression)
+  phenoData <- new("AnnotatedDataFrame",data=pData)
+  featureData <- new("AnnotatedDataFrame",data=fData)
+  ExpSet= ExpressionSet(assayData=Expression,phenoData=phenoData,featureData=featureData)
+  return(ExpSet)
 }
+
+
+#Expand probesets for multiple genes for a single probe
+
+expandProbesets <- function (eset, sep = "///")
+{
+  x <- lapply(featureNames(eset), function(x) strsplit(x, sep)[[1]])
+  y<- lapply(as.character(fData(eset)$gene), function(x) strsplit(x, sep))
+  eset <- eset[order(sapply(x, length)), ]
+  x <- lapply(featureNames(eset), function(x) strsplit(x, sep)[[1]])
+  y<- lapply(as.character(fData(eset)$gene), function(x) strsplit(x, sep))
+  idx <- unlist(sapply(1:length(x), function(i) rep(i, length(x[[i]]))))
+  idy <- unlist(sapply(1:length(y), function(i) rep(i, length(y[[i]]))))
+  xx <- !duplicated(unlist(x))
+  idx <- idx[xx]
+  idy <- idy[xx]
+  x <- unlist(x)[xx]
+  y <- unlist(y)[xx]
+  
+  eset <- eset[idx, ]
+  featureNames(eset) <- x
+  fData(eset)$EntrezGene.ID <- x
+  fData(eset)$gene <- y
+  return(eset)
+  
+}
+
 
 
 distancetype=match.arg(distancetype,c("pearson","uncentered","euclidean"))

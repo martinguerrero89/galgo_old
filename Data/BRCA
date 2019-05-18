@@ -1,0 +1,500 @@
+#Files
+#Metabric & OsloVal data tidy
+#Data source:
+#https://www.synapse.org/#!Synapse:syn1688369/wiki/27311
+#https://www.synapse.org/#!Synapse:syn1688370/wiki/27309
+
+#Synapse client
+#As a sudo (in cmd)
+#install pip
+#pip install synapseclient
+#synapse login -u me@example.com -p password --rememberMe
+#synapse get syn1757053 #clinical data (rbin)
+#synapse get syn1757063 #expression (rbin)
+#synapse get syn1757057 #survival (rbin)
+#synapse get syn1757055 #Disease free surv (rbin)
+
+
+metabric_files="~/Genetic_alg/Data_sets/Metabric/" #Directory where the files were downloaded
+
+load(paste0(metabric_files, "Complete_METABRIC_Clinical_Features_Data.rbin"))
+load(paste0(metabric_files, "Complete_METABRIC_Expression_Data.rbin"))
+load(paste0(metabric_files, "Complete_METABRIC_Clinical_Survival_Data_OS.rbin"))
+load(paste0(metabric_files, "Complete_METABRIC_Clinical_Survival_Data__DSS.rbin"))
+
+
+#Download of the Illumina probes metadata
+#download.file("https://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/v3/HumanHt-12_V3_0_R3_11283641_A.zip","HumanHt-12_V3_0_R3_11283641_A.zip")
+#unzip("HumanHt-12_V3_0_R3_11283641_A.zip")
+ANNOT=readBGX("~/Genetic_alg/Data_sets/HumanHt-12_V3_0_R3_11283641_A.bgx")
+Expression=exprs(Complete_METABRIC_Expression_Data)
+
+expressiontidy2= function(Expression,ANNOT, CLINIC, SURV,BATCH){
+  #require(illuminaio)
+  require(AnnotationDbi)
+  #require(limma)
+  
+  CLINIC$ER.Expr= gsub("\\+", "positive", CLINIC$ER.Expr)
+  CLINIC$ER.Expr= gsub("\\-", "negative", CLINIC$ER.Expr)
+  CLINIC$PR.Expr= gsub("\\+", "positive", CLINIC$PR.Expr)
+  CLINIC$PR.Expr= gsub("\\-", "negative", CLINIC$PR.Expr)
+  CLINIC$Her2.Expr= gsub("\\+", "positive", CLINIC$Her2.Expr)
+  CLINIC$Her2.Expr= gsub("\\-", "negative", CLINIC$Her2.Expr)
+  SURV[,2]= gsub("1", "deceased", SURV[,2])
+  SURV[,2]= gsub("0", "living", SURV[,2])
+  pData= data.frame(
+  row.names= make.names(rownames(CLINIC)),
+  sample_name= make.names(rownames(CLINIC)),
+  alt_sample_name= NA,
+  unique_patient_ID= NA,
+  sample_type= "tumor",
+  er= CLINIC$ER.Expr,
+  pgr= CLINIC$PR.Expr,
+  her2= CLINIC$Her2.Expr,
+  tumor_size= CLINIC$size/10,
+  T=NA,
+  N=NA,
+  age_at_initial_pathologic_diagnosis= CLINIC$age_at_diagnosis,
+  grade=CLINIC$grade,
+  dmfs_days=NA,
+  dmfs_status=NA,
+  days_to_tumor_recurrence=NA,
+  recurrence_status=NA,
+  days_to_death=SURV[,1],
+  vital_status=SURV[,2],
+  tissue=NA,
+  treatment=CLINIC$Treatment,
+  percent_normal_cells=NA,
+  percent_stromal_cells=NA,
+  percent_tumor_cells=NA,
+  batch=BATCH,
+  uncurated_author_metadata=NA,
+  duplicates=NA)
+  
+  probes=rownames(Expression)
+  ANNOT=ANNOT$probe[ANNOT$probe[,"Probe_Id"] %in% probes,]
+  ANNOT= ANNOT[!is.na(ANNOT$Entrez_Gene_ID),]
+  Expression=Expression[ANNOT[,"Probe_Id"],]
+  
+  #Dup=unique(ANNOT[which(duplicated(ANNOT$Entrez_Gene_ID)),"Entrez_Gene_ID"])
+  #Var= apply(Expression,1,var)
+  #drop=NULL
+  #for(j in Dup){
+  #  pos=which(ANNOT$Entrez_Gene_ID==j)
+  #  drop= c(drop,pos[-which.max(Var[pos])])
+  #}
+  #Expression=Expression[-drop,]
+  #ANNOT=ANNOT[-drop,]
+  fData= data.frame(probeset=ANNOT$Probe_Id,gene=ANNOT$Symbol, EntrezGene.ID=ANNOT$Entrez_Gene_ID,best_probe=TRUE,row.names=ANNOT$Probe_Id)
+  #rownames(fData)=ANNOT$Entrez_Gene_ID
+  #rownames(Expression)=ANNOT$Entrez_Gene_ID
+  colnames(Expression)=make.names(colnames(Expression))
+  phenoData <- new("AnnotatedDataFrame",data=pData)
+  featureData <- new("AnnotatedDataFrame",data=fData)
+  ExpSet= ExpressionSet(assayData=Expression,phenoData=phenoData,featureData=featureData)
+  return(ExpSet)
+}
+
+#Expression=expressiontidy(Expression,ANNOT)
+Expset=expressiontidy2(Expression,ANNOT,Complete_METABRIC_Clinical_Features_Data,Complete_METABRIC_Clinical_Survival_Data__DSS,BATCH="metabric") 
+
+
+
+#Apply robust linear scaling
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3283537/#bib61
+#Expression= apply(exprs(Expset),1,genefu::rescale,na.rm=TRUE,q=0.05)
+#Expression=t(Expression)
+#exprs(Expset)=Expression
+##Expression=t(scale(t(Expression)))
+
+
+#data=t(exprs(Expset))
+#annot= fData(Expset)
+#colnames(annot)[2]="Gene.Symbol"
+#annot$probe=annot$EntrezGene.ID
+#PAM50<- molecular.subtyping(sbt.model = "pam50",data = data,annot = annot,do.mapping = TRUE)
+#pData(Expset)$pam50=PAM50$subtype
+#SCM<- molecular.subtyping(sbt.model = "scmgene",data = data,annot = annot,do.mapping = TRUE)
+#pData(Expset)$scm=SCM$subtype
+#IntClust<- molecular.subtyping(sbt.model = "intClust",data = data,annot = annot,do.mapping = TRUE)
+#pData(Expset)$intclust=IntClust$subtype
+#ONCOTYPE= oncotypedx(data=data,annot=annot,do.mapping=TRUE)
+#pData(Expset)$oncotypedx=ONCOTYPE$score
+##GGI= ggi()
+#ENDO=endoPredict(data=data,annot=annot,do.mapping=TRUE)
+#pData(Expset)$endopredict=ENDO$score
+#MAMMA=gene70(data=data,annot=annot,do.mapping=TRUE)
+#pData(Expset)$Mammaprint=MAMMA$score
+
+metabric=Expset
+
+##names(Complete_METABRIC_Clinical_Survival_Data__DSS)=names(Complete_METABRIC_Clinical_Survival_Data_OS)
+##metabric=expobj(Expression = Expression,
+##                Clinical = clinic,
+##                OS = Complete_METABRIC_Clinical_Survival_Data_OS,
+##                DSS = Complete_METABRIC_Clinical_Survival_Data__DSS)
+
+rm(list=c("Complete_METABRIC_Expression_Data","Complete_METABRIC_Clinical_Features_Data","Complete_METABRIC_Clinical_Survival_Data__DSS","Complete_METABRIC_Clinical_Survival_Data_OS","ANNOT","clinic","Expression","metabric_files"))
+
+#Oslo files
+#Synapse client
+#As a sudo (in cmd)
+#install pip
+#pip install synapseclient
+#synapse login -u me@example.com -p secret --rememberMe
+#synapse get syn2188646 / syn1710393 #clinical data (txt/rbin)
+#synapse get syn2188662 / syn1710395 #expression (txt/rbin)
+#synapse get syn2188659 /syn1710396 #survival (txt/rbin)
+#unzip archive.zip
+#cd .R_OBJECTS
+#sudo mv *rbin* ~/Genetic_alg/Data_sets/Osloval
+
+
+oslo_files="~/Genetic_alg/Data_sets/Osloval/"
+
+load(paste0(oslo_files, "OsloValClinicalData.rbin"))
+load(paste0(oslo_files, "OsloValExpn.rbin"))
+load(paste0(oslo_files, "OsloValSurvival.rbin"))
+
+
+##clinic= NotInOslo_NAimput(OsloValClinicalData)
+##clinic=reshapeClinic(clinic)
+
+##download.file("https://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/HumanHT-12_V4_0_R2_15002873_B.zip","HumanHT-12_V4_0_R2_15002873_B.zip")
+##unzip("HumanHT-12_V4_0_R2_15002873_B.zip") 
+ANNOT=readBGX("~/Genetic_alg/Data_sets/HumanHT-12_V4_0_R2_15002873_B.bgx")
+Expression=exprs(OsloValExpn)
+
+Expset=expressiontidy2(Expression,ANNOT,OsloValClinicalData,OsloValSurvival,BATCH="oslo") 
+#Expression=expressiontidy(Expression,ANNOT)
+
+
+#Expression= apply(exprs(Expset),1,genefu::rescale,na.rm=TRUE,q=0.05)
+#Expression=t(Expression)
+#exprs(Expset)=Expression
+##Expression=t(scale(t(Expression)))
+
+
+#data=t(exprs(Expset))
+#annot= fData(Expset)
+#colnames(annot)[2]="Gene.Symbol"
+#annot$probe=annot$EntrezGene.ID
+#PAM50<- molecular.subtyping(sbt.model = "pam50",data = data,annot = annot,do.mapping = TRUE)
+#pData(Expset)$pam50=PAM50$subtype
+#SCM<- molecular.subtyping(sbt.model = "scmgene",data = data,annot = annot,do.mapping = TRUE)
+#pData(Expset)$scm=SCM$subtype
+#IntClust<- molecular.subtyping(sbt.model = "intClust",data = data,annot = annot,do.mapping = TRUE)
+#pData(Expset)$intclust=IntClust$subtype
+#ONCOTYPE= oncotypedx(data=data,annot=annot,do.mapping=TRUE)
+#pData(Expset)$oncotypedx=ONCOTYPE$score
+##GGI= ggi()
+#ENDO=endoPredict(data=data,annot=annot,do.mapping=TRUE)
+#pData(Expset)$endopredict=ENDO$score
+#MAMMA=gene70(data=data,annot=annot,do.mapping=TRUE)
+#pData(Expset)$Mammaprint=MAMMA$score
+
+oslo=Expset
+
+##oslo=expobj(Expression = Expression,
+##            Clinical = clinic,
+##            OS = OsloValSurvival,
+##            DSS = OsloValSurvival)
+
+rm(list=c("OsloValExpn","OsloValClinicalData","OsloValSurvival","ANNOT","clinic","Expression","oslo_files"))
+
+#MetaGxBreast
+library(MetaGxBreast)
+
+#with Recurrence status according https://www.biorxiv.org/content/biorxiv/early/2016/05/12/052910.full.pdf
+#"GSE58644" with error, partially solved with clinical data from geo
+#CAL dataset not well uploaded in MetaGxBreast
+datasets= c("UPP","UNT","UNC4","UCSF","TRANSBIG","STNO2","STK","PNC","NKI","NCI","CAL","MAINZ","EMC2","DFHCC","VDX","GSE25066","GSE58644","MSK")
+platform= c("GPL97","GPL96","GPL885","NA","GPL96","NA","GPL96","GPL570","Agilent","custom","GPL4685","GPL96","GPL570","GPL570","GPL96","GPL96","GPL6244","GPL96")
+affyplatforms= c("GPL96","GPL97","GPL570","GPL571","GPL4685","GPL6244")
+
+#Without CAL
+#datasets= c("UPP","UNT","UNC4","UCSF","TRANSBIG","STNO2","STK","PNC","NKI","NCI","MAINZ","EMC2","DFHCC","VDX","GSE25066","GSE58644","MSK")
+#platform= c("GPL97","GPL96","GPL885","NA","GPL96","NA","GPL96","GPL570","Agilent","custom","GPL96","GPL570","GPL570","GPL96","GPL96","GPL6244","GPL96")
+#affyplatforms= c("GPL96","GPL97","GPL570","GPL571","GPL6244")
+
+
+downl= datasets[which(platform %in% affyplatforms)]
+downl= downl[-which(downl=="UNT")] #UNT data is scaled and is not possible to get AIMS classification
+downl= downl[-which(downl=="CAL")] #CAL data does not perform well in any signature, unknown bias
+
+ALL= loadBreastEsets(loadString = downl, removeDuplicates = TRUE,
+                     quantileCutoff = 0, rescale = FALSE, minNumberGenes = 0,
+                     minNumberEvents = 0, minSampleSize = 0, removeRetracted = TRUE,
+                     removeSubsets = TRUE, keepCommonOnly = FALSE, imputeMissing = FALSE)
+
+esets=ALL$esets
+
+#Correcting UNT data (GSE2990) #Not doing it, rather complicated
+#library(GEOquery)
+#gds <- getGEO("GSE2990")
+#gds <- gds[[1]]
+#sampleNames(gds)=pData(gds)$title
+#sampleNames(esets$UNT) %in% sampleNames(gds)
+
+
+#Correcting GSE58644 data
+library(GEOquery)
+gds <- getGEO("GSE58644")
+gds <- gds[[1]]
+original_time= as.numeric(pData(gds)$"time:ch1")*30.41 #(original data is in months and MetaGxBreast values are in days)
+
+original_status= as.numeric(pData(gds)$"event:ch1")
+original_status[original_status==1 & !is.na(original_status)]='recurrence'
+original_status[original_status==0 & !is.na(original_status)]='norecurrence'
+
+
+esets2= esets[["GSE58644"]]
+MetaGx_time= pData(esets2)$dmfs_days
+MetaGx_status= pData(esets2)$dmfs_status
+
+identical(rownames(pData(esets2)),rownames(pData(gds))) #TRUE, Patients have same name and order 
+
+pData(esets[["GSE58644"]])$dmfs_days=original_time
+pData(esets[["GSE58644"]])$dmfs_status=original_status
+fData(esets[["GSE58644"]])$gene=gsub(" ","",fData(esets[["GSE58644"]])$gene)
+
+
+#downloading CAL data (ERROR in MetaGxBreast) Not included in the analysis?
+#Download E-TABM-158
+
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
+#BiocManager::install("ArrayExpress", version = "3.8")
+#library(ArrayExpress)
+#accession="E-TABM-158"
+#MTAB=getAE(accession,path = "/home/mguerrero/Genetic_alg/Data_sets/MTAB", type = "processed")
+
+
+#MTAB=list(path="/home/mguerrero/Genetic_alg/Data_sets/MTAB",
+#            rawFiles=NULL,
+#            rawArchive=NULL,
+#            processedFiles="breastTumorExpression.txt",
+#            processedArchive="E-TABM-158.processed.1.zip",
+#            sdrf="E-TABM-158.sdrf.txt",
+#            idf="E-TABM-158.idf.txt",
+#            adf="A-AFFY-76.adf.txt")
+
+
+#MTABnames=strsplit(readLines(paste(MTAB$path,MTAB$processedFiles,sep="/"))[1],"\t")[[1]]
+#MTABset=read.table(paste(MTAB$path,MTAB$processedFiles,sep="/"),sep="\t",skip=2,col.names=MTABnames,row.names=1)
+##sdrfnames=strsplit(readLines(paste(MTAB$path,MTAB$sdrf,sep="/"))[1],"\t")[[1]]
+#sdrf=read.table(paste(MTAB$path,MTAB$sdrf,sep="/"),sep="\t",header=TRUE,row.names=1,comment.char="")
+#sdrf= sdrf[sdrf$Scan.Name %in% colnames(MTABset),]
+#sdrf=sdrf[match(colnames(MTABset),sdrf$Scan.Name),]
+#sdrf$genefu.name= gsub("(?i).CEL","",paste("CAL",sdrf$Array.Data.File,sep="_"))
+
+
+#adf= read.table(paste(MTAB$path,MTAB$adf,sep="/"),sep="\t",header=TRUE,row.names=1,comment.char="",skip=10)
+#download.file('ftp://ftp.ncbi.nlm.nih.gov/geo/platforms/GPL4nnn/GPL4685/annot/GPL4685.annot.gz',destfile="GPL4685annot.txt.gz")
+#gunzip("GPL4685annot.txt.gz")
+##ANNOT= read.table("GPL4685annot.txt",sep="\t",skip=27)
+#ANNOT= fread("GPL4685annot.txt",sep="\t",skip=27)
+#ANNOT= ANNOT[ANNOT$ID %in% rownames(MTABset),]
+#ANNOT= ANNOT[match(rownames(MTABset), ANNOT$ID),]
+#fData= data.frame(row.names=ANNOT$ID, probeset=ANNOT$ID, gene=ANNOT$'Gene symbol',EntrezGene.ID=ANNOT$'Gene ID',best_probe=TRUE)
+
+#CAL_HER2= sdrf$Characteristics..ErbB2.positive..IHC..
+#CAL_HER2= gsub("yes","positive",CAL_HER2)
+#CAL_HER2= gsub("no","negative",CAL_HER2)
+#CAL_NODE= sdrf$Characteristics..node.positive.
+#CAL_NODE= gsub("yes",1,CAL_NODE)
+#CAL_NODE= gsub("no",0,CAL_NODE)
+#CAL_DMFS_STAT= sdrf$Characteristics..distal.recurrence.
+#CAL_DMFS_STAT= gsub("yes","recurrence",CAL_DMFS_STAT)
+#CAL_DMFS_STAT= gsub("no","norecurrence",CAL_DMFS_STAT)
+#CAL_DMFS_STAT= gsub("n/a",NA,CAL_DMFS_STAT)
+#CAL_RFS_STAT= sdrf$Characteristics..recurrence.
+#CAL_RFS_STAT= gsub("yes","recurrence",CAL_RFS_STAT)
+#CAL_RFS_STAT= gsub("no","norecurrence",CAL_RFS_STAT)
+#CAL_RFS_STAT= gsub("n/a",NA,CAL_RFS_STAT)
+#CAL_DSS_STAT=sdrf$Characteristics..dead.of.disease.
+#CAL_DSS_STAT= gsub("yes","deceased",CAL_DSS_STAT)
+#CAL_DSS_STAT= gsub("no","living",CAL_DSS_STAT)
+#CAL_DSS_STAT= gsub("n/a",NA,CAL_DSS_STAT)
+
+#HT=sdrf$Characteristics..hormonal.therapy.
+#HT=gsub("yes","HT",HT)
+#HT=gsub("no","",HT)
+#HT=gsub("n/a",NA,HT)
+#CT=sdrf$Characteristics..chemotherapy.treatment.
+#CT=gsub("yes","CT",CT)
+#CT=gsub("no","",CT)
+#CT=gsub("n/a",NA,CT)
+#RT=sdrf$Characteristics..radiation.treatment.
+#RT=gsub("yes","RT",RT)
+#RT=gsub("no","",RT)
+#RT=gsub("n/a",NA,RT)
+#CAL_TREAT= paste(HT,CT,RT,sep="/")
+
+#pData= data.frame(
+#  row.names= make.names(sdrf$Scan.Name),
+#  sample_name= make.names(sdrf$Scan.Name),
+#  alt_sample_name= sdrf$genefu.name,
+#  unique_patient_ID= as.character(sdrf$Extract.Name),
+#  sample_type= "tumor",
+#  er= as.character(sdrf$Characteristics..EstrogenReceptorStatus.),
+#  pgr= as.character(sdrf$Characteristics..Progesterone.Receptor.status.),
+#  her2= CAL_HER2,
+#  tumor_size= as.numeric(as.character(sdrf$Characteristics..tumor.size..mm..)),
+#  T=NA,
+#  N=CAL_NODE,
+#  age_at_initial_pathologic_diagnosis= sdrf$Characteristics..age.at.diagnosis.,
+#  grade=sdrf$Characteristics..TumorGrading.,
+#  dmfs_days=as.numeric(as.character(sdrf$Characteristics..distal.recurrence.time.))*365.25,
+#  dmfs_status=CAL_DMFS_STAT,
+#  days_to_tumor_recurrence=as.numeric(as.character(sdrf$Characteristics..recurrence.time.))*365.25,
+#  recurrence_status=CAL_RFS_STAT,
+#  days_to_death=as.numeric(as.character(sdrf$Characteristics..followup.time.))*365.25,
+#  vital_status=CAL_DSS_STAT,
+#  tissue=NA,
+#  treatment=CAL_TREAT,
+#  percent_normal_cells=NA,
+#  percent_stromal_cells=NA,
+#  percent_tumor_cells=NA,
+#  batch="CAL",
+#  uncurated_author_metadata=NA,
+#  duplicates=NA,stringsAsFactors=FALSE)
+  
+#phenoData <- new("AnnotatedDataFrame",data=pData)
+#featureData <- new("AnnotatedDataFrame",data=fData)
+#esets[["CAL"]]= ExpressionSet(assayData=as.matrix(MTABset),phenoData=phenoData,featureData=featureData)
+
+
+
+expandProbesets <- function (eset, sep = "///")
+{
+  x <- lapply(featureNames(eset), function(x) strsplit(x, sep)[[1]])
+  y<- lapply(as.character(fData(eset)$gene), function(x) strsplit(x, sep))
+  eset <- eset[order(sapply(x, length)), ]
+  x <- lapply(featureNames(eset), function(x) strsplit(x, sep)[[1]])
+  y<- lapply(as.character(fData(eset)$gene), function(x) strsplit(x, sep))
+  idx <- unlist(sapply(1:length(x), function(i) rep(i, length(x[[i]]))))
+  idy <- unlist(sapply(1:length(y), function(i) rep(i, length(y[[i]]))))
+  xx <- !duplicated(unlist(x))
+  idx <- idx[xx]
+  idy <- idy[xx]
+  x <- unlist(x)[xx]
+  y <- unlist(y)[xx]
+  
+  eset <- eset[idx, ]
+  featureNames(eset) <- x
+  fData(eset)$EntrezGene.ID <- x
+  fData(eset)$gene <- y
+  return(eset)
+  
+}
+
+
+
+for(i in downl){
+pData(esets[[i]])$status<- NA
+pData(esets[[i]])[is.na(pData(esets[[i]])$recurrence_status),"status"]= pData(esets[[i]])[is.na(pData(esets[[i]])$recurrence_status),"dmfs_status"]
+pData(esets[[i]])[!is.na(pData(esets[[i]])$recurrence_status),"status"]= pData(esets[[i]])[!is.na(pData(esets[[i]])$recurrence_status),"recurrence_status"]
+pData(esets[[i]])$status= as.numeric(pData(esets[[i]])$status=="recurrence")
+pData(esets[[i]])$time<- NA
+pData(esets[[i]])[is.na(pData(esets[[i]])$recurrence_status),"time"]= pData(esets[[i]])[is.na(pData(esets[[i]])$recurrence_status),"dmfs_days"]
+pData(esets[[i]])[!is.na(pData(esets[[i]])$recurrence_status),"time"]= pData(esets[[i]])[!is.na(pData(esets[[i]])$recurrence_status),"days_to_tumor_recurrence"]
+
+ct=censor.time(pData(esets[[i]])$time, pData(esets[[i]])$status, time.cens = 5475 )
+pData(esets[[i]])$time=ct$surv.time.cens
+pData(esets[[i]])$status=ct$surv.event.cens
+
+}
+
+pData(metabric)$status= as.numeric(pData(metabric)$vital_status=="deceased")
+pData(metabric)$time= as.numeric(as.character(pData(metabric)$days_to_death))
+ct=censor.time(pData(metabric)$time, pData(metabric)$status, time.cens = 5475 )
+pData(metabric)$time=ct$surv.time.cens
+pData(metabric)$status=ct$surv.event.cens
+esets$metabric=metabric
+
+
+pData(oslo)$status= as.numeric(pData(oslo)$vital_status=="deceased")
+pData(oslo)$time= as.numeric(as.character(pData(oslo)$days_to_death))
+ct=censor.time(pData(oslo)$time, pData(oslo)$status, time.cens = 5475 )
+pData(oslo)$time=ct$surv.time.cens
+pData(oslo)$status=ct$surv.event.cens
+esets$oslo=oslo
+
+downl=c(downl,"metabric","oslo")
+
+for(i in downl){
+
+
+  #Drop duplicated genes (keep genes with highest variance)
+  Dup=unique(fData(esets[[i]])[which(duplicated(fData(esets[[i]])$EntrezGene.ID)),"EntrezGene.ID"])
+  Var= apply(exprs(esets[[i]]),1,var)
+  drop=NULL
+  for(j in Dup){
+   pos=which(fData(esets[[i]])$EntrezGene.ID==j)
+    drop= c(drop,pos[-which.max(Var[pos])])
+    
+  }
+  esets[[i]]=esets[[i]][-drop,]
+
+#Average expression for repeated probes
+#Expression= avereps(exprs(esets[[i]]),ID= fData(esets[[i]])$EntrezGene.ID)
+#Genenames=unique(fData(esets[[i]])$EntrezGene.ID)
+#ProbIDs=NULL
+#  for(j in Genenames){
+#    pos=which(fData(esets[[i]])$EntrezGene.ID==j)
+#    ProbIDs= c(ProbIDs, paste(fData(esets[[i]])$probeset[pos], collapse="/"))
+# }
+#esets[[i]]=esets[[i]][!duplicated(fData(esets[[i]])$EntrezGene.ID),]
+#fData(esets[[i]])$probeset=ProbIDs
+
+featureNames(esets[[i]]) <- fData(esets[[i]])$EntrezGene.ID
+#exprs(esets[[i]])=Expression
+
+esets[[i]]=expandProbesets(esets[[i]])
+
+ 
+ 
+ #Apply robust linear scaling
+#https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3283537/#bib61
+Expression= apply(exprs(esets[[i]]),1,genefu::rescale,na.rm=TRUE,q=0.05)
+
+#ddata=esets[[i]]
+data=Expression
+annot= fData(esets[[i]])
+colnames(annot)[2]="Gene.Symbol"
+annot$probe=annot$EntrezGene.ID
+AIMS<-  molecular.subtyping(sbt.model = "AIMS",data = t(exprs(esets[[i]])), annot = annot,do.mapping = TRUE)
+pData(esets[[i]])$AIMS=AIMS$subtype
+PAM50<- molecular.subtyping(sbt.model = "pam50",data = data, annot = annot,do.mapping = TRUE)
+pData(esets[[i]])$pam50=PAM50$subtype
+SCM<- molecular.subtyping(sbt.model = "scmgene",data = data,annot = annot,do.mapping = TRUE)
+pData(esets[[i]])$scm=SCM$subtype
+IntClust<- molecular.subtyping(sbt.model = "intClust",data = data,annot = annot,do.mapping = TRUE)
+pData(esets[[i]])$intclust=IntClust$subtype
+ONCOTYPE= oncotypedx(data=data,annot=annot,do.mapping=TRUE)
+pData(esets[[i]])$oncotypedx=ONCOTYPE$score
+#GGI= ggi()
+ENDO=endoPredict(data=data,annot=annot,do.mapping=TRUE)
+pData(esets[[i]])$endopredict=ENDO$score
+MAMMA=gene70(data=data,annot=annot,do.mapping=TRUE)
+pData(esets[[i]])$Mammaprint=MAMMA$score
+
+Expression=t(Expression)
+exprs(esets[[i]])=Expression
+
+}
+
+
+inALL=Reduce(intersect, lapply(esets,featureNames))
+inALLpData=Reduce(intersect, lapply(esets,function(x) colnames(pData(x))))
+for(i in downl){
+  esets[[i]]=esets[[i]][inALL,]
+  pData(esets[[i]])=pData(esets[[i]])[,inALLpData]
+}
+for(i in downl){
+esets[[i]]=esets[[i]][,!is.na(Surv(pData(esets[[i]])$time,pData(esets[[i]])$status))]
+}
+#save(esets,file="/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_BRCA.rda")
+#save(esets,file="/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_BRCAavereps.rda")
+ #save(esets,file="/home/mguerrero/Genetic_alg/Data_sets/RNA_BRCA.rda")

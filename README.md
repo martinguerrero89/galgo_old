@@ -8,7 +8,5 @@
 
 * Open R and set the main Galgo folder as working directory
 * First, be sure you have all the needed libraries (listed in the 'libraries.R' file) installed and properly configured.
-* Of importance is to have gpuR package propperly installed and working. To instruction on the installation process and troubleshoot follow: https://github.com/cdeterman/gpuR/wiki
+* Of importance is to have ´gpuR´ package propperly installed and working. To instruction on the installation process and troubleshoot follow: https://github.com/cdeterman/gpuR/wiki
 * In the *Functions* folder are all the files to run the algorithm.
-* To run the code, open the R terminal and set the *Genetic_algo* folder as the main path and then source the 'RUN.R' file.
-* To edit the hyperparamethers, change the repective values of the parameters in the 'Hyperparameters.R' file.

@@ -15,7 +15,7 @@
 #synapse get syn1757055 #Disease free surv (rbin)
 
 
-metabric_files="~/Genetic_alg/Data_sets/Metabric/" #Directory where the files were downloaded
+metabric_files="./Data/Metabric/" #Directory where the files were downloaded" #Directory where the files were downloaded
 
 load(paste0(metabric_files, "Complete_METABRIC_Clinical_Features_Data.rbin"))
 load(paste0(metabric_files, "Complete_METABRIC_Expression_Data.rbin"))
@@ -24,16 +24,16 @@ load(paste0(metabric_files, "Complete_METABRIC_Clinical_Survival_Data__DSS.rbin"
 
 
 #Download of the Illumina probes metadata
-#download.file("https://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/v3/HumanHt-12_V3_0_R3_11283641_A.zip","HumanHt-12_V3_0_R3_11283641_A.zip")
-#unzip("HumanHt-12_V3_0_R3_11283641_A.zip")
-ANNOT=readBGX("~/Genetic_alg/Data_sets/HumanHt-12_V3_0_R3_11283641_A.bgx")
+download.file("https://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/v3/HumanHt-12_V3_0_R3_11283641_A.zip","./Data/HumanHt-12_V3_0_R3_11283641_A.zip")
+unzip("./Data/HumanHt-12_V3_0_R3_11283641_A.zip",exdir="./Data")
+ANNOT=readBGX("./Data/HumanHt-12_V3_0_R3_11283641_A.bgx")
 Expression=exprs(Complete_METABRIC_Expression_Data)
 
 Expset=expressiontidy2(Expression,ANNOT,Complete_METABRIC_Clinical_Features_Data,Complete_METABRIC_Clinical_Survival_Data__DSS,BATCH="metabric") 
 
 metabric=Expset
 
-rm(list=c("Complete_METABRIC_Expression_Data","Complete_METABRIC_Clinical_Features_Data","Complete_METABRIC_Clinical_Survival_Data__DSS","Complete_METABRIC_Clinical_Survival_Data_OS","ANNOT","clinic","Expression","metabric_files"))
+rm(list=c("Complete_METABRIC_Expression_Data","Complete_METABRIC_Clinical_Features_Data","Complete_METABRIC_Clinical_Survival_Data__DSS","Complete_METABRIC_Clinical_Survival_Data_OS","ANNOT","Expression","metabric_files"))
 
 #Oslo files
 #Synapse client
@@ -46,7 +46,7 @@ rm(list=c("Complete_METABRIC_Expression_Data","Complete_METABRIC_Clinical_Featur
 #synapse get syn2188659 /syn1710396 #survival (txt/rbin)
 #unzip archive.zip
 
-oslo_files="~/Genetic_alg/Data_sets/Osloval/" # Directory where the files were downloaded
+oslo_files="./Data/Oslo/" # Directory where the files were downloaded
 
 load(paste0(oslo_files, "OsloValClinicalData.rbin"))
 load(paste0(oslo_files, "OsloValExpn.rbin"))
@@ -54,20 +54,15 @@ load(paste0(oslo_files, "OsloValSurvival.rbin"))
 
 
 #Download of the Illumina probes metadata
-##download.file("https://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/HumanHT-12_V4_0_R2_15002873_B.zip","HumanHT-12_V4_0_R2_15002873_B.zip")
-##unzip("HumanHT-12_V4_0_R2_15002873_B.zip") 
-ANNOT=readBGX("~/Genetic_alg/Data_sets/HumanHT-12_V4_0_R2_15002873_B.bgx")
+download.file("https://support.illumina.com/content/dam/illumina-support/documents/downloads/productfiles/humanht-12/HumanHT-12_V4_0_R2_15002873_B.zip","./Data/HumanHT-12_V4_0_R2_15002873_B.zip")
+unzip("./Data/HumanHT-12_V4_0_R2_15002873_B.zip",exdir="./Data") 
+ANNOT=readBGX("./Data/HumanHT-12_V4_0_R2_15002873_B.bgx")
 Expression=exprs(OsloValExpn)
 Expset=expressiontidy2(Expression,ANNOT,OsloValClinicalData,OsloValSurvival,BATCH="oslo") 
 
 oslo=Expset
 
-##oslo=expobj(Expression = Expression,
-##            Clinical = clinic,
-##            OS = OsloValSurvival,
-##            DSS = OsloValSurvival)
-
-rm(list=c("OsloValExpn","OsloValClinicalData","OsloValSurvival","ANNOT","clinic","Expression","oslo_files"))
+rm(list=c("OsloValExpn","OsloValClinicalData","OsloValSurvival","ANNOT","Expression","oslo_files"))
 
 #MetaGxBreast
 library(MetaGxBreast)

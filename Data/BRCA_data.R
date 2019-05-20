@@ -198,4 +198,4 @@ for(i in downl){
 esets[[i]]=esets[[i]][,!is.na(Surv(pData(esets[[i]])$time,pData(esets[[i]])$status))]
 }
 
-save(esets,file="/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_BRCA.rda") #Save in the target directory
+save(esets,file="./Data/RNA_BRCA.rda") #Save in the target directory

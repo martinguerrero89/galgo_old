@@ -27,7 +27,7 @@ dir.create(paste0("./Results/Results_",h),recursive=TRUE)
 resultdir=paste0("./Results/Results_",h)
 source("./Functions/geneticalg.R")
 
-file= paste0("results",500,".rda")
+file= paste0("results",generations,".rda")
 load(paste0(resultdir,file))
 X1=output$Solutions
 PARETO=output$ParetoFront

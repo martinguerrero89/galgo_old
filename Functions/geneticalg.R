@@ -69,7 +69,6 @@ for(g in 1:generations){
     
     X1= cbind(X1,CrowD) #data.frame with solution vector, number of clusters, ranking and crowding distance
     
-    Archive[[g]]=X1[X1[,"rnkIndex"]==1,(chrom_length+2):(chrom_length+3)]
     #output for the generation
     print(paste0("Generation ",g," Non-dominated solutions:"))  
     print(X1[X1[,"rnkIndex"]==1,(chrom_length+1):(chrom_length+5)])

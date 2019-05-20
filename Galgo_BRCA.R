@@ -1,5 +1,5 @@
 
-load("/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_BRCA.rda") #Directory where RNA_BRCA.rda was saved
+load("./Data/RNA_BRCA.rda") #Directory where RNA_BRCA.rda was saved
 downl=names(esets)
 
 ##Galgo Hyperparameters
@@ -7,7 +7,6 @@ downl=names(esets)
 population= 300                   #Number of individuals to evaluate
 generations=500                 #Number of generations
 nCV=5                             #Number of crossvalidations for function "crossvalidation"
-plotgr=FALSE                      #set to TRUE if you want a generation plot
 GPU= TRUE                         # to use gpuR
 
 TournamentSize=2

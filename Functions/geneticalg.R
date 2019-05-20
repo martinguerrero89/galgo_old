@@ -110,9 +110,6 @@ for(g in 1:generations){
     
     PARETO[[g]]= X1[,(chrom_length+2):(chrom_length+3)] #Saves the fitnes of the solutions of the current generation 
     
-    Archive[[g]]=X1[X1[,"rnkIndex"]==1,(chrom_length+2):(chrom_length+3)]
-    
-    
     #output for the generation
     print(paste0("Generation ",g," Non-dominated solutions:"))  
     print(X1[X1[,"rnkIndex"]==1,(chrom_length+1):(chrom_length+5)])

@@ -3,9 +3,9 @@ library(GEOquery)
 #GSE39582 dataset
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE39582
-gds <- getGEO("GSE39582", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE39582", destdir = "./Data")
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
+destdir = "./Data"
 gds<- getGEO(filename=paste(destdir,"GSE39582_series_matrix.txt.gz",sep="/"))
 eset1 <- gds
 
@@ -22,9 +22,9 @@ pData(eset1)=esetClinic
 #GSE14333 dataset
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14333
-gds <- getGEO("GSE14333", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE14333", destdir = "./Data")
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
+destdir = "./Data"
 gds<- getGEO(filename=paste(destdir,"GSE14333_series_matrix.txt.gz",sep="/"))
 eset2 <- gds
 
@@ -45,9 +45,9 @@ pData(eset2)=esetClinic
 #GSE17536 dataset
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE17536
-gds <- getGEO("GSE17536", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE17536", destdir = "./Data")
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
+destdir = "./Data"
 gds<- getGEO(filename=paste(destdir,"GSE17536_series_matrix.txt.gz",sep="/"))
 eset3 <- gds
 
@@ -65,9 +65,9 @@ pData(eset3)=esetClinic
 #GSE33113 dataset
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE33113
-gds <- getGEO("GSE33113", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE33113", destdir = "./Data")
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
+destdir = "./Data"
 gds<- getGEO(filename=paste(destdir,"GSE33113_series_matrix.txt.gz",sep="/"))
 eset4 <- gds
 
@@ -86,9 +86,9 @@ pData(eset4)=esetClinic
 #GSE37892 dataset
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37892
-gds <- getGEO("GSE37892", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE37892", destdir = "./Data")
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
+destdir = "./Data"
 gds<- getGEO(filename=paste(destdir,"GSE37892_series_matrix.txt.gz",sep="/"))
 eset5 <- gds
 
@@ -195,7 +195,7 @@ detach("package:hgu133plus2.db", unload=TRUE)
 #source("https://bioconductor.org/biocLite.R")
 #biocLite("TCGAbiolinks")
 library(TCGAbiolinks)
-#setwd("/home/mguerrero/Genetic_alg/App_FINAL/Data")
+#setwd("./Data")
 
 
 query <- GDCquery(project = "TCGA-COAD",
@@ -228,7 +228,7 @@ data <- GDCprepare(query, save = TRUE,
                    remove.files.prepared = F)
 
 #Open expression matrix
-setwd("/home/mguerrero/Genetic_alg/App_FINAL")
+setwd('..')
 load("./Data/RNA_READ.rda")
 data1=data
 load("./Data/RNA_COAD.rda")
@@ -277,7 +277,6 @@ rm(list=c("isna","notrep","stagei","stageia","stageii","stageiia","stageiib","st
 
 #Survival
 colData(data)$status=as.numeric(colData(data)$vital_status=="dead")
-#data= data[,!is.na(colData(data)$status)]
 colData(data)$time=NA
 colData(data)$time[colData(data)$status==1 & !is.na(colData(data)$status)]= colData(data)$days_to_death[colData(data)$status==1 & !is.na(colData(data)$status)]
 colData(data)$time[colData(data)$status==0 & !is.na(colData(data)$status)]= colData(data)$days_to_last_follow_up[colData(data)$status==0 & !is.na(colData(data)$status)]
@@ -376,4 +375,4 @@ dim(exprs(esets[[1]]))[1]==dim(exprs(esets[[6]]))[1]
 #Check if rownames match
 identical(featureNames(esets[[1]]), featureNames(esets[[6]]))
 
-save(esets, file="/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_CRC.R")
+save(esets, file="./Data/RNA_CRC.R")

@@ -214,12 +214,14 @@ for(i in 3:length(downl[-which(downl=="metabric")])){
 }
 
 
+finalSig= RR_data[]
+finalSig= substr(finalSig, 1, nchar(finalSig)-5)
 
 library(survminer)
   tumortotal1 <- survfit(Surv(Comb$time,Comb$status)~ Comb$pam50)
-  tumortotal2 <- survfit(Surv(Comb$time,Comb$status)~ Comb$"4_result.36")
+  tumortotal2 <- survfit(Surv(Comb$time,Comb$status)~ Comb[[finalSig]])
   tumortotal1diff <- survdiff(Surv(Comb$time,Comb$status)~ Comb$pam50)
-  tumortotal2diff <- survdiff(Surv(Comb$time,Comb$status)~ Comb$"4_result.36")
+  tumortotal2diff <- survdiff(Surv(Comb$time,Comb$status)~ Comb[[finalSig]])
   tumortotal1pval<- pchisq(tumortotal1diff$chisq, length(tumortotal1diff$n) - 1, lower.tail = FALSE) 
   tumortotal2pval<- pchisq(tumortotal2diff$chisq, length(tumortotal2diff$n) - 1, lower.tail = FALSE) 
   
@@ -231,9 +233,9 @@ library(survminer)
   print(p)
   
   tumortotal1 <- survfit(Surv(esets[["metabric"]]$time,esets[["metabric"]]$status)~ esets[["metabric"]]$pam50)
-  tumortotal2 <- survfit(Surv(esets[["metabric"]]$time,esets[["metabric"]]$status)~ esets[["metabric"]]$"4_result.36")
+  tumortotal2 <- survfit(Surv(esets[["metabric"]]$time,esets[["metabric"]]$status)~ esets[["metabric"]][[finalSig]])
   tumortotal1diff <- survdiff(Surv(esets[["metabric"]]$time,esets[["metabric"]]$status)~ esets[["metabric"]]$pam50)
-  tumortotal2diff <- survdiff(Surv(esets[["metabric"]]$time,esets[["metabric"]]$status)~ esets[["metabric"]]$"4_result.36")
+  tumortotal2diff <- survdiff(Surv(esets[["metabric"]]$time,esets[["metabric"]]$status)~ esets[["metabric"]][[finalSig]])
   tumortotal1pval<- pchisq(tumortotal1diff$chisq, length(tumortotal1diff$n) - 1, lower.tail = FALSE) 
   tumortotal2pval<- pchisq(tumortotal2diff$chisq, length(tumortotal2diff$n) - 1, lower.tail = FALSE) 
   
@@ -245,7 +247,6 @@ library(survminer)
   print(p)
 
 
-finalSig="4_result.36"
 V=unlist(strsplit(finalSig,"_"))
 R=as.logical(X1[V[2],1:chrom_length])
   k=as.numeric(V[1])

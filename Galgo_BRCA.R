@@ -214,7 +214,7 @@ for(i in 3:length(downl[-which(downl=="metabric")])){
 }
 
 
-finalSig= RR_data[]
+finalSig= RR_data[RR_data$dataset=="Combined" & RR_data$signature %in% paste0(galgo,".Pred")[which.max(RR_data[RR_data$dataset=="Combined" & RR_data$signature %in% paste0(galgo,".Pred"),"cindex"])],"signature"]
 finalSig= substr(finalSig, 1, nchar(finalSig)-5)
 
 library(survminer)

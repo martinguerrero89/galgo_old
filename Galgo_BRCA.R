@@ -263,21 +263,21 @@ OncotypeCol= colfuncR(100)[as.numeric(cut(as.numeric(TrainClass[,"oncotypedx"]),
 endoCol= colfuncR(100)[as.numeric(cut(as.numeric(TrainClass[,"endopredict"]),breaks=100))]
 MammaCol= colfuncR(100)[as.numeric(cut(as.numeric(TrainClass[,"Mammaprint"]),breaks=100))]
 
-
 IntClustCol=colfuncR(10)[as.numeric(as.factor(TrainClass[,"intclust.Pred"]))]
 scmCol=colfuncR(4)[as.numeric(as.factor(TrainClass[,"scm.Pred"]))]
 pam50Col=colfuncR(5)[as.numeric(as.factor(TrainClass[,"pam50.Pred"]))]
 AIMSCol=colfuncR(5)[as.numeric(as.factor(TrainClass[,"AIMS.Pred"]))]
 
 for(i in 1:length(galgo)){
-  
  V= unlist(strsplit(galgo[i],"_"))
  n= as.numeric(V[1]) 
-  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TrainClass[,paste0(galgo[i],".Pred")]))])
+  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TrainClass[,paste(galgo[i],"Pred",sep=".")]))])
 }
 
+GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+SignatureCols= data.frame(AIMSCol,pam50Col,scmCol,IntClustCol,endoCol,MammaCol,OncotypeCol)
+COLS=cbind(GalgoCols,SignatureCols)
 
-COLS=data.frame(galgo4, galgo7,galgo5, galgo3,galgo2,AIMSCol,pam50Col,scmCol,IntClustCol,endoCol,MammaCol,OncotypeCol)
 
 CLASS=TrainClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)

@@ -402,7 +402,7 @@ p + coord_flip()
 ## heatmap data prep ##
 library(dplyr)
 
-split_bar<- split(bar, bar$subtype)
+split_bar<- split(BAR, BAR$subtype)
 
 st_I<- as.data.frame(split_bar[1])
 st_I<- arrange(st_I, X1.path)

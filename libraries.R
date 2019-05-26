@@ -27,3 +27,4 @@ require(limma)
 require(edgeR)
 require(hgu133plus2.db)
 require(RColorBrewer)
+require(sva) #For batch correction

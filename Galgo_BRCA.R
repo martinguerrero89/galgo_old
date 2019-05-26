@@ -351,7 +351,7 @@ TrainExprs= exprs(esets[[trainset]])
 for(i in 1:length(levels(CLASS))){
    ind= which(CLASS==levels(CLASS)[i])
    clust.kegg.p = gage(TrainExprs,ref= c(1:ncol(TrainExprs))[-ind], gsets=kegg.gs,compare="as.group")
-   assign(paste0("clust.kegg.p_",i), clust.kegg.p.esg.up)
+   assign(paste0("clust.kegg.p_",i), clust.kegg.p)
   
 ##Sort and count signficant gene sets based on q- or p-value cutoffs:
    clust.kegg.p.sig<- sigGeneSet(clust.kegg.p, outname = paste0("clust.kegg.",i), heatmap = FALSE)
@@ -386,14 +386,14 @@ bar= bar[order(bar$stat),]
 BAR[[i]]=bar
 }
 
-BAR=do.call(rbind,bar)
+BAR=do.call(rbind,BAR)
 BAR$path <- factor(BAR$path, levels=unique(BAR$path) )
 
 
 # Basic barplot
 p<-ggplot(data=BAR, aes(x=path, y=stat,fill=as.factor(subtype))) +
   geom_bar(stat="identity",position="dodge")+
-  scale_fill_manual(values=c(1,2, 3,4))
+  scale_fill_manual(values=c(1:length(levels(CLASS))))
 p
 
 # Horizontal bar plot

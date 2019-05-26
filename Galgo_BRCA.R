@@ -282,7 +282,7 @@ COLS=cbind(GalgoCols,SignatureCols)
 CLASS=TrainClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)
 
-library(gplots)
+source("./Functions/heatmap_3.R")
 
 colfunc <- colorRampPalette(c("blue", "white", "red"))
 breaks=seq(-2, 2, by=0.1) 
@@ -305,19 +305,21 @@ OncotypeCol= colfuncR(100)[as.numeric(cut(as.numeric(TestClass[,"oncotypedx"]),b
 endoCol= colfuncR(100)[as.numeric(cut(as.numeric(TestClass[,"endopredict"]),breaks=100))]
 MammaCol= colfuncR(100)[as.numeric(cut(as.numeric(TestClass[,"Mammaprint"]),breaks=100))]
 
-
 IntClustCol=colfuncR(10)[as.numeric(as.factor(TestClass[,"intclust.Pred"]))]
 scmCol=colfuncR(4)[as.numeric(as.factor(TestClass[,"scm.Pred"]))]
 pam50Col=colfuncR(5)[as.numeric(as.factor(TestClass[,"pam50.Pred"]))]
 AIMSCol=colfuncR(5)[as.numeric(as.factor(TestClass[,"AIMS.Pred"]))]
-galgo2=colfuncR(2)[as.numeric(as.factor(TestClass[,"2_result.16.Pred"]))]
-galgo3=colfuncR(3)[as.numeric(as.factor(TestClass[,"3_result.50.Pred"]))]
-galgo5=colfuncR(5)[as.numeric(as.factor(TestClass[,"5_result.3.Pred"]))]
-galgo7=colfuncR(7)[as.numeric(as.factor(TestClass[,"7_result.9.Pred"]))]
-galgo4=colfuncR(4)[as.numeric(as.factor(TestClass[,"4_result.36.Pred"]))]
 
+for(i in 1:length(galgo)){
+ V= unlist(strsplit(galgo[i],"_"))
+ n= as.numeric(V[1]) 
+  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TestClass[,paste(galgo[i],"Pred",sep=".")]))])
+}
 
-COLS=data.frame(galgo4, galgo7,galgo5, galgo3,galgo2,AIMSCol,pam50Col,scmCol,IntClustCol,endoCol,MammaCol,OncotypeCol)
+GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+SignatureCols= data.frame(AIMSCol,pam50Col,scmCol,IntClustCol,endoCol,MammaCol,OncotypeCol)
+COLS=cbind(GalgoCols,SignatureCols)
+
 
 CLASS=TestClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)
@@ -326,14 +328,13 @@ HM2=heatmap.3(TestExprs[R,Ord][rev(HM1$rowInd),],Colv= FALSE,Rowv=FALSE,hclustfu
 
 #Save centroids and metanalisis
 
-library(xlsx)
 for(i in names(CentroidsList)){
-write.xlsx(CentroidsList[[i]], file="Breast_Galgo_Centroids.xlsx", sheetName=i,append=TRUE, row.names=TRUE)
+write.xlsx(CentroidsList[[i]], file=paste(resultdir,"Breast_Galgo_Centroids.xlsx",sep="/"), sheetName=i,append=TRUE, row.names=TRUE)
 }
 
 
-write.xlsx(RR_data[,c(6,5,1:4)], file="Breast_CI_Meta.xlsx", sheetName="CI",append=TRUE, row.names=FALSE)
-write.xlsx(ccmData, file="Breast_CI_Meta.xlsx", sheetName="Comparison",append=TRUE, row.names=TRUE)
+write.xlsx(RR_data[,c(6,5,1:4)], file=paste(resultdir,"Breast_CI_Meta.xlsx",sep="/"), sheetName="CI",append=TRUE, row.names=FALSE)
+write.xlsx(ccmData, file=paste(resultdir,"Breast_CI_Meta.xlsx",sep="/"), sheetName="Comparison",append=TRUE, row.names=TRUE)
 
 
 #Gage pathway analysis

@@ -25,6 +25,8 @@ require(SummarizedExperiment)
 require(TCGAbiolinks)
 require(limma)
 require(edgeR)
+require(gage)
+require(gageData)
 require(hgu133plus2.db)
 require(RColorBrewer)
 require(sva) #For batch correction

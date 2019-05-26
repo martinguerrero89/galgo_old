@@ -404,37 +404,22 @@ library(dplyr)
 
 split_bar<- split(BAR, BAR$subtype)
 
-st_I<- as.data.frame(split_bar[1])
-st_I<- arrange(st_I, X1.path)
+heatmap_table= list()
+for(i in 1:length(split_bar)){
+ 
+st<- as.data.frame(split_bar[[i]])
+st<- arrange(st, path)
+ heatmap_table[[i]]= st$stat
+  }
+heatmap_table= do.call(cbind, heatmap_table)
+colnames(heatmap_table) = paste0("subtype.",1:length(split_bar))
+rownames(heatmap_table)<- as.character(st$path)
 
-st_II<- as.data.frame(split_bar[2])
-st_II<- arrange(st_II, X2.path)
-
-st_III<- as.data.frame(split_bar[3])
-st_III<- arrange(st_III, X3.path)
-
-st_IV<- as.data.frame(split_bar[4])
-st_IV<- arrange(st_IV, X4.path)
-
-
-heatmap_table<- as.data.frame(cbind(st_I$X1.stat, st_II$X2.stat, st_III$X3.stat, st_IV$X4.stat))
-colnames(heatmap_table)<- c("Subtype I", "Subtype II", "Subtype III", "Subtype IV")
-rownames(heatmap_table)<- as.character(st_I$X1.path)
-
+  
 ## heatmap ##
 colfuncR <-  colorRampPalette(rev(brewer.pal(11,"RdBu")))
-#col<- colorRampPalette(c("#abdda4","#fee08b","#d53e4f"))(80)
-#col<- colorRampPalette(c("green","white","red"))(100)
 col<-colfuncR(100)
-
-#heatmap.3(t(heatmap_table), col= col, trace="none",
-#          sepcolor="white",
-#          colsep=1:nrow(heatmap_table),
-#          rowsep=1:ncol(heatmap_table),
-#          dendrogram = "none")
-
-
- heatmap.3(as.matrix(heatmap_table), col= col, trace="none",
+heatmap.3(as.matrix(heatmap_table), col= col, trace="none",
            sepcolor="white",
            colsep=1:ncol(heatmap_table),
            rowsep=1:nrow(heatmap_table),
@@ -469,7 +454,7 @@ D=mydist(prob_matrix[R,])
   Cdist=c(Cdist,cind)
 }
 
-Name=paste("Breast",j,sep=".")
+Name=paste("Breast",k,sep=".")
 CdistBreast[[Name]]=Cdist
 CresBreast[[Name]]= as.numeric(RES[RES$solution==j,"trainC"])
 

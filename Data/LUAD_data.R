@@ -5,11 +5,12 @@ download.file("http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wil
 unzip("./Data/HumanHt-12_V3_0_R3_11283641_A.zip",exdir="./Data")
 WilkCentroids= read.csv("./Data/wilkerson.2012.LAD.predictor.centroids.csv",row.names=1)
 
+destdir = "./Data"
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE50081
-gds <- getGEO("GSE50081", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE50081", destdir = destdir)
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
+
 gds<- getGEO(filename=paste(destdir,"GSE50081_series_matrix.txt.gz",sep="/"))
 eset1 <- gds
 
@@ -62,9 +63,8 @@ fData(eset1)=fData(eset1)[,c("ID","EntrezGene.ID","gene")]
 
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE31210
-gds <- getGEO("GSE31210", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE31210", destdir = destdir)
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
 gds<- getGEO(filename=paste(destdir,"GSE31210_series_matrix.txt.gz",sep="/"))
 eset2 <- gds
 
@@ -121,9 +121,8 @@ fData(eset2)=fData(eset2)[,c("ID","EntrezGene.ID","gene")]
 
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE19188
-gds <- getGEO("GSE19188", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE19188", destdir = destdir)
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
 gds<- getGEO(filename=paste(destdir,"GSE19188_series_matrix.txt.gz",sep="/"))
 eset3 <- gds
 
@@ -170,9 +169,8 @@ fData(eset3)=fData(eset3)[,c("ID","EntrezGene.ID","gene")]
 
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE37745
-gds <- getGEO("GSE37745", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE37745", destdir = destdir)
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
 gds<- getGEO(filename=paste(destdir,"GSE37745_series_matrix.txt.gz",sep="/"))
 eset4 <- gds
 
@@ -229,9 +227,8 @@ fData(eset4)=fData(eset4)[,c("ID","EntrezGene.ID","gene")]
 
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE14814
-gds <- getGEO("GSE14814", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE14814", destdir = destdir)
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
 gds<- getGEO(filename=paste(destdir,"GSE14814_series_matrix.txt.gz",sep="/"))
 eset5 <- gds
 
@@ -289,9 +286,8 @@ fData(eset5)=fData(eset5)[,c("ID","EntrezGene.ID","gene")]
 
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE68465
-gds <- getGEO("GSE68465", destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data")
+gds <- getGEO("GSE68465", destdir = destdir)
 gds <- gds[[1]]
-destdir = "/home/mguerrero/Genetic_alg/App_FINAL/Data"
 gds<- getGEO(filename=paste(destdir,"GSE68465_series_matrix.txt.gz",sep="/"))
 eset6 <- gds
 
@@ -363,7 +359,7 @@ fData(eset6)=fData(eset6)[,c("ID","EntrezGene.ID","gene")]
 #source("https://bioconductor.org/biocLite.R")
 #biocLite("TCGAbiolinks")
 library(TCGAbiolinks)
-setwd("/home/mguerrero/Genetic_alg/App_FINAL/Data")
+setwd(destdir)
 
 
 query <- GDCquery(project = "TCGA-LUAD",
@@ -380,8 +376,8 @@ data <- GDCprepare(query, save = TRUE,
                    save.filename = "RNA_LUAD.rda",
                    remove.files.prepared = F)
 
-
 #Open expression matrix
+setwd('..')
 load("./Data/RNA_LUAD.rda")
 library(SummarizedExperiment)
 
@@ -397,7 +393,6 @@ keep= filterByExpr(Counts)
 data=data[keep,]
 filteredCounts=Counts[keep,]
 VoomCounts=voom(filteredCounts,plot=TRUE)
-#assays(data)$HTSeq=t(scale(t(VoomCounts$E)))
 assays(data)$HTSeq=VoomCounts$E
 colnames(VoomCounts$E)=colData(data)$patient
 
@@ -520,3 +515,4 @@ dim(exprs(esets[[1]]))[1]==dim(exprs(esets[[6]]))[1]
 identical(featureNames(esets[[1]]), featureNames(esets[[6]]))
 
 save(esets, file="/home/mguerrero/Genetic_alg/App_FINAL/Data/RNA_LUAD_all.R")
+                                    

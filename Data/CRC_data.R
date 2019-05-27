@@ -192,10 +192,8 @@ detach("package:hgu133plus2.db", unload=TRUE)
 
 #TCGA data
 
-#source("https://bioconductor.org/biocLite.R")
-#biocLite("TCGAbiolinks")
 library(TCGAbiolinks)
-#setwd("./Data")
+setwd("./Data")
 
 
 query <- GDCquery(project = "TCGA-COAD",

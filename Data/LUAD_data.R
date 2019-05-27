@@ -1,11 +1,9 @@
 #Centroids from Wilkerson et al.
-#Download from command line
+#Download from "http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wilkerson.2012.LAD.predictor.centroids.csv.zip"
 
-#wget -P /home/mguerrero/Genetic_alg/App_FINAL/Data "http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wilkerson.2012.LAD.predictor.centroids.csv.zip"
-#cd /home/mguerrero/Genetic_alg/App_FINAL/Data
-#unzip wilkerson.2012.LAD.predictor.centroids.csv.zip
-
-WilkCentroids= read.csv("/home/mguerrero/Genetic_alg/App_FINAL/Data/wilkerson.2012.LAD.predictor.centroids.csv",row.names=1)
+download.file("http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wilkerson.2012.LAD.predictor.centroids.csv.zip", "./Data/wilkerson.2012.LAD.predictor.centroids.csv.zip")
+unzip("./Data/HumanHt-12_V3_0_R3_11283641_A.zip",exdir="./Data")
+WilkCentroids= read.csv("./Data/wilkerson.2012.LAD.predictor.centroids.csv",row.names=1)
 
 
 #https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE50081

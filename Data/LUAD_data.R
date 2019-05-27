@@ -2,7 +2,7 @@
 #Download from "http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wilkerson.2012.LAD.predictor.centroids.csv.zip"
 
 download.file("http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wilkerson.2012.LAD.predictor.centroids.csv.zip", "./Data/wilkerson.2012.LAD.predictor.centroids.csv.zip")
-unzip("./Data/HumanHt-12_V3_0_R3_11283641_A.zip",exdir="./Data")
+unzip("./Data/wilkerson.2012.LAD.predictor.centroids.csv.zip",exdir="./Data")
 WilkCentroids= read.csv("./Data/wilkerson.2012.LAD.predictor.centroids.csv",row.names=1)
 
 destdir = "./Data"

@@ -8,7 +8,7 @@ population= 300                   #Number of individuals to evaluate
 generations=500                 #Number of generations
 nCV=5                             #Number of crossvalidations for function "crossvalidation"
 GPU= TRUE                         # to use gpuR
-
+distancetype="pearson"          #Options are: "pearson","uncentered","spearman","euclidean"
 TournamentSize=2
 period=5475
 

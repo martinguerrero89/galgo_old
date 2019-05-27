@@ -323,89 +323,81 @@ CLASS=as.factor(TrainClass[,paste(finalSig,"Pred",sep=".")])
 TrainExprs= exprs(esets[[trainset]])
 
 
-ind1<- which( CLASS == levels(CLASS)[1])
-ind2<- which( CLASS == levels(CLASS)[2])
-clust1.kegg.p <- gage(TrainExprs,ref=ind2, gsets = kegg.gs,compare="as.group")
-clust2.kegg.p <- gage(TrainExprs,ref=ind1, gsets = kegg.gs,compare="as.group")
-
+for(i in 1:length(levels(CLASS))){
+   ind= which(CLASS==levels(CLASS)[i])
+   clust.kegg.p = gage(TrainExprs,ref= c(1:ncol(TrainExprs))[-ind], gsets=kegg.gs,compare="as.group")
+   assign(paste0("clust.kegg.p_",i), clust.kegg.p)
+  
 ##Sort and count signficant gene sets based on q- or p-value cutoffs:
-##plot heatmap by clust
-
-clust1.kegg.p.sig<- sigGeneSet(clust1.kegg.p, outname = "clust1.kegg", heatmap = FALSE)
-clust2.kegg.p.sig<- sigGeneSet(clust2.kegg.p, outname = "clust2.kegg", heatmap = FALSE)
-
-## extract a non-redundant signcant gene set list
-
-# subtype I #
-clust1.kegg.p.esg.up <- esset.grp(clust1.kegg.p$greater,
-                                  TrainExprs,ref=ind2, gsets = kegg.gs,
-                                  outname = "clust1.kegg.up",
+   clust.kegg.p.sig<- sigGeneSet(clust.kegg.p, outname = paste0("clust.kegg.",i), heatmap = FALSE)
+clust.kegg.p.esg.up <- esset.grp(clust.kegg.p$greater,
+                                  TrainExprs,ref=c(1:ncol(TrainExprs))[-ind], gsets = kegg.gs,
+                                  outname = paste0("clust.kegg.UP_",i),
                                   test4up = TRUE, output = TRUE,compare="as.group")
-                                  
-
-clust1.kegg.p.esg.dn <- esset.grp(clust1.kegg.p$less,
-                                  TrainExprs,ref=ind2, gsets = kegg.gs, 
-                                  test4up = FALSE, output = TRUE, 
-                                  outname = "clust1.kegg.dn",compare="as.group")
-
-g1<- clust1.kegg.p.esg.up$essentialSets[1:7]
-l1<- clust1.kegg.p.esg.dn$essentialSets[1:7]
-
-# subtype II #
-
-clust2.kegg.p.esg.up <- esset.grp(clust2.kegg.p$greater,
-                                 TrainExprs,ref=ind1, gsets = kegg.gs,
-                                  outname = "clust2.kegg.up",
+   assign(paste0("clust.up_",i), clust.kegg.p.esg.up)
+   
+   clust.kegg.p.esg.dn <- esset.grp(clust.kegg.p$less,
+                                  TrainExprs,ref=c(1:ncol(TrainExprs))[-ind], gsets = kegg.gs,
+                                  outname = paste0("clust.kegg.DN_",i),
                                   test4up = TRUE, output = TRUE,compare="as.group")
+   assign(paste0("clust.dn_",i), clust.kegg.p.esg.dn)
 
-clust2.kegg.p.esg.dn <- esset.grp(clust2.kegg.p$less,
-                                  TrainExprs,ref=ind1, gsets = kegg.gs, 
-                                  test4up = FALSE, output = TRUE, 
-                                  outname = "clust2.kegg.dn",compare="as.group")
+   assign(paste0("g",i), clust.kegg.p.esg.up$essentialSets[1:3])
+   assign(paste0("l",i), clust.kegg.p.esg.dn$essentialSets[1:3])
+   
+ }
 
-g2<- clust2.kegg.p.esg.up$essentialSets[1:7]
-l2<- clust2.kegg.p.esg.dn$essentialSets[1:7]
+#Ploting Gage
 
-Paths<- c(g1,g2,l1,l2)
-Paths<- unique(c(g1,g2,l1,l2))
+Paths= c(unlist(mget(paste0("g", 1:length(levels(CLASS))))), unlist(mget(paste0("l", 1:length(levels(CLASS))))))
+Paths= unique(Paths)
 Path_name<- substring(Paths,12)
 
-bar1=data.frame(stat=clust1.kegg.p$stats[Paths,1],path=Path_name,subtype=1)
-bar1= bar1[order(bar1$stat),]
-bar2=data.frame(stat=clust2.kegg.p$stats[Paths,1],path=Path_name,subtype=2)
-bar2= bar2[order(bar2$stat),]
+BAR=list()
+for( i in 1:length(levels(CLASS))){
+bar= data.frame(stat=get(paste0("clust.kegg.p_",i))$stats[Paths,1],path=Path_name,subtype=i)
+bar= bar[order(bar$stat),]
+BAR[[i]]=bar
+}
+
+BAR=do.call(rbind,BAR)
+BAR$path <- factor(BAR$path, levels=unique(BAR$path) )
 
 
-bar=rbind(bar1,bar2)
+# Basic barplot
+p<-ggplot(data=BAR, aes(x=path, y=stat,fill=as.factor(subtype))) +
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_manual(values=c(1:length(levels(CLASS))))
+p
 
-bar$path <- factor(bar$path, levels=unique(bar$path) )
-
+# Horizontal bar plot
+p + coord_flip()
 
 ## heatmap data prep ##
+library(dplyr)
 
-split_bar<- split(bar, bar$subtype)
+split_bar<- split(BAR, BAR$subtype)
 
-st_I<- as.data.frame(split_bar[1])
-st_I<- arrange(st_I, X1.path)
+heatmap_table= list()
+for(i in 1:length(split_bar)){
+ 
+st<- as.data.frame(split_bar[[i]])
+st<- arrange(st, path)
+ heatmap_table[[i]]= st$stat
+  }
+heatmap_table= do.call(cbind, heatmap_table)
+colnames(heatmap_table) = paste0("subtype.",1:length(split_bar))
+rownames(heatmap_table)<- as.character(st$path)
 
-st_II<- as.data.frame(split_bar[2])
-st_II<- arrange(st_II, X2.path)
-
-heatmap_table<- as.data.frame(cbind(st_I$X1.stat, st_II$X2.stat))
-colnames(heatmap_table)<- c("Subtype I", "Subtype II")
-rownames(heatmap_table)<- as.character(st_I$X1.path)
-
+  
 ## heatmap ##
 colfuncR <-  colorRampPalette(rev(brewer.pal(11,"RdBu")))
 col<-colfuncR(100)
-
-
- heatmap.3(as.matrix(heatmap_table), col= col, trace="none",
+heatmap.3(as.matrix(heatmap_table), col= col, trace="none",
            sepcolor="white",
            colsep=1:ncol(heatmap_table),
            rowsep=1:nrow(heatmap_table),
-           dendrogram = "none",margin=c(6,28),cexRow=1,cexCol = 1)
-
+           dendrogram = "none",margin=c(6,24),cexRow=1,cexCol = 1)
 
 
 ###Comparison with random signatures
@@ -435,7 +427,7 @@ D=mydist(prob_matrix[R,])
   Cdist=c(Cdist,cind)
 }
 
-Name=paste("Colon",j,sep=".")
+Name=paste("Colon",k,sep=".")
 CdistColon[[Name]]=Cdist
 CresColon[[Name]]= as.numeric(RES[RES$solution==j,"trainC"])
 

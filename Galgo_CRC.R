@@ -252,50 +252,54 @@ rownames(TrainExprs)= fData(esets[[trainset]])$gene
 TrainClass= pData(esets[[trainset]])[,riskP]
 
 colfuncR <- colorRampPalette(rev(brewer.pal(11 , "Spectral" )))
-CMS= colfuncR(5)[as.numeric(as.factor(TrainClass[,riskP[4]]))]
-galgo2=colfuncR(2)[as.numeric(as.factor(TrainClass[,riskP[3]]))]
-galgo3=colfuncR(3)[as.numeric(as.factor(TrainClass[,riskP[2]]))]
-galgo4=colfuncR(4)[as.numeric(as.factor(TrainClass[,riskP[1]]))]
+CMS= colfuncR(5)[as.numeric(as.factor(TrainClass[,"CMS.Pred"]))]
 
+for(i in 1:length(galgo)){
+ V= unlist(strsplit(galgo[i],"_"))
+ n= as.numeric(V[1]) 
+  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TrainClass[,paste(galgo[i],"Pred",sep=".")]))])
+}
 
-COLS=data.frame(galgo2, galgo3,galgo4, CMS)
+GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+SignatureCols= data.frame(CMS)
+COLS=cbind(GalgoCols,SignatureCols)
 
 CLASS=TrainClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)
 library(gplots)
+source("./Functions/heatmap_3.R")
 
 colfunc <- colorRampPalette(c("blue", "white", "red"))
 breaks=seq(-2, 2, by=0.1) 
-
 breaks=append(breaks, 5)
 breaks=append(breaks, -5, 0)
 
 HM1=heatmap.3(TrainExprs[R,Ord],Colv= FALSE,hclustfun=myclust,dendrogram="none", distfun=mydist2,trace="none",scale="row",col=colfunc,breaks=breaks,ColSideColors =as.matrix(COLS[Ord,]),ColSideColorsSize=3)
 
-
 #Testset (Comb)
-
 
 TestExprs=ComBat(exprs(Comb),pData(Comb)$batch)
 rownames(TestExprs)= fData(Comb)$gene  
 TestClass= pData(Comb)[,riskP]
 
 colfuncR <- colorRampPalette(rev(brewer.pal(11 , "Spectral" )))
-CMS= colfuncR(5)[as.numeric(as.factor(TestClass[,riskP[4]]))]
-galgo2=colfuncR(2)[as.numeric(as.factor(TestClass[,riskP[3]]))]
-galgo3=colfuncR(3)[as.numeric(as.factor(TestClass[,riskP[2]]))]
-galgo4=colfuncR(4)[as.numeric(as.factor(TestClass[,riskP[1]]))]
+CMS= colfuncR(5)[as.numeric(as.factor(TestClass[,"CMS.Pred"]))]
 
+for(i in 1:length(galgo)){
+ V= unlist(strsplit(galgo[i],"_"))
+ n= as.numeric(V[1]) 
+  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TestClass[,paste(galgo[i],"Pred",sep=".")]))])
+}
 
-COLS=data.frame(galgo2, galgo3,galgo4, CMS)
-
+GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+SignatureCols= data.frame(CMS)
+COLS=cbind(GalgoCols,SignatureCols)
 
 CLASS=TestClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)
 
 
 HM2=heatmap.3(TestExprs[R,Ord][rev(HM1$rowInd),],Colv= FALSE,Rowv=FALSE,hclustfun=myclust,dendrogram="none", distfun=mydist2,trace="none",scale="row",col=colfunc,breaks=breaks,ColSideColors =as.matrix(COLS[Ord,]),ColSideColorsSize=3)
-
 
 
 library(xlsx)

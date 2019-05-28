@@ -257,16 +257,18 @@ rownames(TrainExprs)= fData(esets[[trainset]])$gene
 TrainClass= pData(esets[[trainset]])[,riskP]
 
 colfuncR <- colorRampPalette(rev(brewer.pal(11 , "Spectral" )))
-Wilk= colfuncR(3)[as.numeric(as.factor(TrainClass[,riskP[6]]))]
-galgo2=colfuncR(2)[as.numeric(as.factor(TrainClass[,riskP[5]]))]
-galgo3=colfuncR(3)[as.numeric(as.factor(TrainClass[,riskP[4]]))]
-galgo4=colfuncR(4)[as.numeric(as.factor(TrainClass[,riskP[3]]))]
-galgo5=colfuncR(5)[as.numeric(as.factor(TrainClass[,riskP[2]]))]
-galgo6=colfuncR(6)[as.numeric(as.factor(TrainClass[,riskP[1]]))]
+WilkCol= colfuncR(3)[as.numeric(as.factor(TrainClass[,"Wilk.Subtype"]))]
 
+for(i in 1:length(galgo)){
+ V= unlist(strsplit(galgo[i],"_"))
+ n= as.numeric(V[1]) 
+  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TrainClass[,paste(galgo[i],"Pred",sep=".")]))])
+}
 
-COLS=data.frame(galgo4, galgo2, galgo3,galgo5, galgo6, Wilk)
-
+GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+SignatureCols= data.frame(WilkCol)
+COLS=cbind(GalgoCols,SignatureCols)
+            
 CLASS=TrainClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)
 library(gplots)
@@ -287,15 +289,18 @@ rownames(TestExprs)= fData(Comb)$gene
 TestClass= pData(Comb)[,riskP]
 
 colfuncR <- colorRampPalette(rev(brewer.pal(11 , "Spectral" )))
-Wilk= colfuncR(3)[as.numeric(as.factor(TestClass[,riskP[6]]))]
-galgo2=colfuncR(2)[as.numeric(as.factor(TestClass[,riskP[5]]))]
-galgo3=colfuncR(3)[as.numeric(as.factor(TestClass[,riskP[4]]))]
-galgo4=colfuncR(4)[as.numeric(as.factor(TestClass[,riskP[3]]))]
-galgo5=colfuncR(5)[as.numeric(as.factor(TestClass[,riskP[2]]))]
-galgo6=colfuncR(6)[as.numeric(as.factor(TestClass[,riskP[1]]))]
+WilkCol= colfuncR(3)[as.numeric(as.factor(TestClass[,"Wilk.Subtype]))]
 
-COLS=data.frame(galgo4, galgo2, galgo3,galgo5, galgo6, Wilk)
+for(i in 1:length(galgo)){
+ V= unlist(strsplit(galgo[i],"_"))
+ n= as.numeric(V[1]) 
+  assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TestClass[,paste(galgo[i],"Pred",sep=".")]))])
+}
 
+GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+SignatureCols= data.frame(WilkCol)
+COLS=cbind(GalgoCols,SignatureCols)
+ 
 CLASS=TestClass[,paste(finalSig,"Pred",sep=".")]
 Ord= order(CLASS)
 

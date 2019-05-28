@@ -306,6 +306,16 @@ Ord= order(CLASS)
 
 HM2=heatmap.3(TestExprs[R,Ord][rev(HM1$rowInd),],Colv= FALSE,Rowv=FALSE,hclustfun=myclust,dendrogram="none", distfun=mydist2,trace="none",scale="row",col=colfunc,breaks=breaks,ColSideColors =as.matrix(COLS[Ord,]),ColSideColorsSize=3)
 
+#Save centroids and metanalisis
+
+for(i in names(CentroidsList)){
+write.xlsx(CentroidsList[[i]], file=paste(resultdir,"Lung_Galgo_Centroids.xlsx",sep="/"), sheetName=i,append=TRUE, row.names=TRUE)
+}
+
+
+write.xlsx(RR_data[,c(6,5,1:4)], file=paste(resultdir,"Lung_CI_Meta.xlsx",sep="/"), sheetName="CI",append=TRUE, row.names=FALSE)
+write.xlsx(ccmData, file=paste(resultdir,"Lung_CI_Meta.xlsx",sep="/"), sheetName="Comparison",append=TRUE, row.names=TRUE)
+
 
 library(gage)
 data(go.sets.hs)
@@ -314,87 +324,29 @@ kegg.gs=go.sets.hs
 CLASS=as.factor(TrainClass[,paste(finalSig,"Pred",sep=".")])
 TrainExprs= exprs(esets[[trainset]])
 
-
-ind1<- which( CLASS == levels(CLASS)[1])
-ind2<- which( CLASS == levels(CLASS)[2])
-ind3<- which( CLASS == levels(CLASS)[3])
-ind4<- which( CLASS == levels(CLASS)[4])
-
-
-clust1.kegg.p <- gage(TrainExprs,ref=c(ind2,ind3,ind4), gsets = kegg.gs,compare="as.group")
-clust2.kegg.p <- gage(TrainExprs,ref=c(ind1,ind3,ind4), gsets = kegg.gs,compare="as.group")
-clust3.kegg.p <- gage(TrainExprs,ref=c(ind1,ind2,ind4), gsets = kegg.gs,compare="as.group")
-clust4.kegg.p <- gage(TrainExprs,ref=c(ind1,ind2,ind3), gsets = kegg.gs,compare="as.group")
-
+for(i in 1:length(levels(CLASS))){
+   ind= which(CLASS==levels(CLASS)[i])
+   clust.kegg.p = gage(TrainExprs,ref= c(1:ncol(TrainExprs))[-ind], gsets=kegg.gs,compare="as.group")
+   assign(paste0("clust.kegg.p_",i), clust.kegg.p)
+  
 ##Sort and count signficant gene sets based on q- or p-value cutoffs:
-##plot heatmap by clust
-
-clust1.kegg.p.sig<- sigGeneSet(clust1.kegg.p, outname = "clust1.kegg", heatmap = FALSE)
-clust2.kegg.p.sig<- sigGeneSet(clust2.kegg.p, outname = "clust2.kegg", heatmap = FALSE)
-clust3.kegg.p.sig<- sigGeneSet(clust3.kegg.p, outname = "clust3.kegg", heatmap = FALSE)
-clust4.kegg.p.sig<- sigGeneSet(clust4.kegg.p, outname = "clust4.kegg", heatmap = FALSE)
-
-## extract a non-redundant signcant gene set list
-
-# subtype I #
-clust1.kegg.p.esg.up <- esset.grp(clust1.kegg.p$greater,
-                                  TrainExprs,ref=c(ind2,ind3,ind4), gsets = kegg.gs,
-                                  outname = "clust1.kegg.up",
+   clust.kegg.p.sig<- sigGeneSet(clust.kegg.p, outname = paste0("clust.kegg.",i), heatmap = FALSE)
+clust.kegg.p.esg.up <- esset.grp(clust.kegg.p$greater,
+                                  TrainExprs,ref=c(1:ncol(TrainExprs))[-ind], gsets = kegg.gs,
+                                  outname = paste0("clust.kegg.UP_",i),
                                   test4up = TRUE, output = TRUE,compare="as.group")
-
-clust1.kegg.p.esg.dn <- esset.grp(clust1.kegg.p$less,
-                                  TrainExprs,ref=c(ind2,ind3,ind4), gsets = kegg.gs, 
-                                  test4up = FALSE, output = TRUE, 
-                                  outname = "clust1.kegg.dn",compare="as.group")
-
-g1<- clust1.kegg.p.esg.up$essentialSets[1:3]
-l1<- clust1.kegg.p.esg.dn$essentialSets[1:3]
-
-# subtype II #
-
-clust2.kegg.p.esg.up <- esset.grp(clust2.kegg.p$greater,
-                                 TrainExprs,ref=c(ind1,ind3,ind4), gsets = kegg.gs,
-                                  outname = "clust2.kegg.up",
+   assign(paste0("clust.up_",i), clust.kegg.p.esg.up)
+   
+   clust.kegg.p.esg.dn <- esset.grp(clust.kegg.p$less,
+                                  TrainExprs,ref=c(1:ncol(TrainExprs))[-ind], gsets = kegg.gs,
+                                  outname = paste0("clust.kegg.DN_",i),
                                   test4up = TRUE, output = TRUE,compare="as.group")
+   assign(paste0("clust.dn_",i), clust.kegg.p.esg.dn)
 
-clust2.kegg.p.esg.dn <- esset.grp(clust2.kegg.p$less,
-                                  TrainExprs,ref=c(ind1,ind3,ind4), gsets = kegg.gs, 
-                                  test4up = FALSE, output = TRUE, 
-                                  outname = "clust2.kegg.dn",compare="as.group")
-
-g2<- clust2.kegg.p.esg.up$essentialSets[1:3]
-l2<- clust2.kegg.p.esg.dn$essentialSets[1:3]
-
-# subtype III #
-
-clust3.kegg.p.esg.up <- esset.grp(clust3.kegg.p$greater,
-                                 TrainExprs,ref=c(ind1,ind2,ind4), gsets = kegg.gs,
-                                  outname = "clust3.kegg.up",
-                                  test4up = TRUE, output = TRUE,compare="as.group")
-
-clust3.kegg.p.esg.dn <- esset.grp(clust3.kegg.p$less,
-                                  TrainExprs,ref=c(ind1,ind2,ind4), gsets = kegg.gs, 
-                                  test4up = FALSE, output = TRUE, 
-                                  outname = "clust3.kegg.dn",compare="as.group")
-
-g3<- clust3.kegg.p.esg.up$essentialSets[1:3]
-l3<- clust3.kegg.p.esg.dn$essentialSets[1:3]
-
-
-# subtype IV #
-
-clust4.kegg.p.esg.up <- esset.grp(clust4.kegg.p$greater,
-                                 TrainExprs,ref=c(ind1,ind2,ind3), gsets = kegg.gs,
-                                  outname = "clust4.kegg.up",
-                                  test4up = TRUE, output = TRUE,compare="as.group")
-
-clust4.kegg.p.esg.dn <- esset.grp(clust4.kegg.p$less,
-                                  TrainExprs,ref=c(ind1,ind2,ind3), gsets = kegg.gs, 
-                                  test4up = FALSE, output = TRUE, 
-                                  outname = "clust4.kegg.dn",compare="as.group")
-
-g4<- clust4.kegg.p.esg.up$essentialSets[1:3]
-l4<- clust4.kegg.p.esg.dn$essentialSets[1:3]
+   assign(paste0("g",i), clust.kegg.p.esg.up$essentialSets[1:3])
+   assign(paste0("l",i), clust.kegg.p.esg.dn$essentialSets[1:3])
+   
+ }
 
 
 Paths<- c(g1,g2,g3,g4,l1,l2,l3,l4)
@@ -450,14 +402,6 @@ col<-colfuncR(100)
            dendrogram = "none",margin=c(6,28),cexRow=1,cexCol = 1)
 
 
-library(xlsx)
-for(i in names(CentroidsList)){
-write.xlsx(CentroidsList[[i]], file="Lung_Galgo_Centroids.xlsx", sheetName=i,append=TRUE, row.names=TRUE)
-}
-
-
-write.xlsx(RR_data[,c(6,5,1:4)], file="Lung_CI_Meta.xlsx", sheetName="CI",append=TRUE, row.names=FALSE)
-write.xlsx(ccmData, file="Lung_CI_Meta.xlsx", sheetName="Comparison",append=TRUE, row.names=TRUE)
 
 #Cindex dist
 

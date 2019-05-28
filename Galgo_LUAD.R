@@ -348,62 +348,57 @@ clust.kegg.p.esg.up <- esset.grp(clust.kegg.p$greater,
    
  }
 
-
-Paths<- c(g1,g2,g3,g4,l1,l2,l3,l4)
-Paths<- unique(c(g1,g2,g3,g4,l1,l2,l3,l4))
+Paths= c(unlist(mget(paste0("g", 1:length(levels(CLASS))))), unlist(mget(paste0("l", 1:length(levels(CLASS))))))
+Paths= unique(Paths)
 Path_name<- substring(Paths,12)
 
-bar1=data.frame(stat=clust1.kegg.p$stats[Paths,1],path=Path_name,subtype=1)
-bar1= bar1[order(bar1$stat),]
-bar2=data.frame(stat=clust2.kegg.p$stats[Paths,1],path=Path_name,subtype=2)
-bar2= bar2[order(bar2$stat),]
-bar3=data.frame(stat=clust3.kegg.p$stats[Paths,1],path=Path_name,subtype=3)
-bar3= bar3[order(bar3$stat),]
-bar4=data.frame(stat=clust4.kegg.p$stats[Paths,1],path=Path_name,subtype=4)
-bar4= bar4[order(bar4$stat),]
+BAR=list()
+for( i in 1:length(levels(CLASS))){
+bar= data.frame(stat=get(paste0("clust.kegg.p_",i))$stats[Paths,1],path=Path_name,subtype=i)
+bar= bar[order(bar$stat),]
+BAR[[i]]=bar
+}
 
+BAR=do.call(rbind,BAR)
+BAR$path <- factor(BAR$path, levels=unique(BAR$path) )
 
-bar=rbind(bar1,bar2,bar3,bar4)
+# Basic barplot
+p<-ggplot(data=BAR, aes(x=path, y=stat,fill=as.factor(subtype))) +
+  geom_bar(stat="identity",position="dodge")+
+  scale_fill_manual(values=c(1:length(levels(CLASS))))
+p
 
-bar$path <- factor(bar$path, levels=unique(bar$path) )
-
+# Horizontal bar plot
+p + coord_flip()
 
 ## heatmap data prep ##
+library(dplyr)
 
-split_bar<- split(bar, bar$subtype)
+split_bar<- split(BAR, BAR$subtype)
 
-st_I<- as.data.frame(split_bar[1])
-st_I<- arrange(st_I, X1.path)
+heatmap_table= list()
+for(i in 1:length(split_bar)){
+ 
+st<- as.data.frame(split_bar[[i]])
+st<- arrange(st, path)
+ heatmap_table[[i]]= st$stat
+  }
+heatmap_table= do.call(cbind, heatmap_table)
+colnames(heatmap_table) = paste0("subtype.",1:length(split_bar))
+rownames(heatmap_table)<- as.character(st$path)
 
-st_II<- as.data.frame(split_bar[2])
-st_II<- arrange(st_II, X2.path)
-
-
-st_III<- as.data.frame(split_bar[3])
-st_III<- arrange(st_III, X3.path)
-
-st_IV<- as.data.frame(split_bar[4])
-st_IV<- arrange(st_IV, X4.path)
-
-
-heatmap_table<- as.data.frame(cbind(st_I$X1.stat, st_II$X2.stat,st_III$X3.stat,st_IV$X4.stat))
-colnames(heatmap_table)<- c("Subtype I", "Subtype II","Subtype III", "Subtype IV")
-rownames(heatmap_table)<- as.character(st_I$X1.path)
-
+  
 ## heatmap ##
 colfuncR <-  colorRampPalette(rev(brewer.pal(11,"RdBu")))
 col<-colfuncR(100)
-
-
- heatmap.3(as.matrix(heatmap_table), col= col, trace="none",
+heatmap.3(as.matrix(heatmap_table), col= col, trace="none",
            sepcolor="white",
            colsep=1:ncol(heatmap_table),
            rowsep=1:nrow(heatmap_table),
-           dendrogram = "none",margin=c(6,28),cexRow=1,cexCol = 1)
+           dendrogram = "none",margin=c(6,24),cexRow=1,cexCol = 1)
 
 
-
-#Cindex dist
+#Cindex comparison with random
 
 CdistLung=list()
 CresLung=list()
@@ -430,7 +425,7 @@ D=mydist(prob_matrix[R,])
   Cdist=c(Cdist,cind)
 }
 
-Name=paste("Lung",j,sep=".")
+Name=paste("Lung",k,sep=".")
 CdistLung[[Name]]=Cdist
 CresLung[[Name]]= as.numeric(RES[RES$solution==j,"trainC"])
 }

@@ -257,7 +257,7 @@ rownames(TrainExprs)= fData(esets[[trainset]])$gene
 TrainClass= pData(esets[[trainset]])[,riskP]
 
 colfuncR <- colorRampPalette(rev(brewer.pal(11 , "Spectral" )))
-WilkCol= colfuncR(3)[as.numeric(as.factor(TrainClass[,"Wilk.Subtype"]))]
+WilkCol= colfuncR(3)[as.numeric(as.factor(TrainClass[,"Wilk.Subtype.Pred"]))]
 
 for(i in 1:length(galgo)){
  V= unlist(strsplit(galgo[i],"_"))
@@ -265,7 +265,8 @@ for(i in 1:length(galgo)){
   assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TrainClass[,paste(galgo[i],"Pred",sep=".")]))])
 }
 
-GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+
+GalgoCols=do.call(cbind,mget(paste0("galgo",sub("\\_.*", "", galgo))))
 SignatureCols= data.frame(WilkCol)
 COLS=cbind(GalgoCols,SignatureCols)
             

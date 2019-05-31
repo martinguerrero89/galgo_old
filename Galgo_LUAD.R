@@ -290,7 +290,7 @@ rownames(TestExprs)= fData(Comb)$gene
 TestClass= pData(Comb)[,riskP]
 
 colfuncR <- colorRampPalette(rev(brewer.pal(11 , "Spectral" )))
-WilkCol= colfuncR(3)[as.numeric(as.factor(TestClass[,"Wilk.Subtype]))]
+WilkCol= colfuncR(3)[as.numeric(as.factor(TestClass[,"Wilk.Subtype.Pred"]))]
 
 for(i in 1:length(galgo)){
  V= unlist(strsplit(galgo[i],"_"))
@@ -298,7 +298,7 @@ for(i in 1:length(galgo)){
   assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TestClass[,paste(galgo[i],"Pred",sep=".")]))])
 }
 
-GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+GalgoCols=do.call(cbind,mget(paste0("galgo",sub("\\_.*", "", galgo))))
 SignatureCols= data.frame(WilkCol)
 COLS=cbind(GalgoCols,SignatureCols)
  
@@ -351,6 +351,7 @@ clust.kegg.p.esg.up <- esset.grp(clust.kegg.p$greater,
 
 Paths= c(unlist(mget(paste0("g", 1:length(levels(CLASS))))), unlist(mget(paste0("l", 1:length(levels(CLASS))))))
 Paths= unique(Paths)
+Paths= Paths[!is.na(Paths)]               
 Path_name<- substring(Paths,12)
 
 BAR=list()

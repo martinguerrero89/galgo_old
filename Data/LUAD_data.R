@@ -382,6 +382,8 @@ load("./Data/RNA_LUAD.rda")
 library(SummarizedExperiment)
 
 data=data[,!duplicated(colData(data)$patient)]
+data=data[!duplicated(rowData(data)$ensembl_gene_id),]
+
 
 #Voom normalization
 library(limma)

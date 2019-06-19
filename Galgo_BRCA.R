@@ -243,7 +243,7 @@ library(survminer)
   
   SURV=list(PAM50=tumortotal1, GALGO=tumortotal2)
   par(cex=1.35, mar=c(3.8, 3.8, 2.5, 2.5) + 0.1)
-  p=ggsurvplot(SURV,combine=TRUE,data=Comb,risk.table=TRUE,pval=TRUE,palette="dark2", title="Train Set \n Breast survival comparison", surv.scale="percent", conf.int=FALSE, xlab="time (days)", ylab="survival(%)", xlim=c(0,5500),break.time.by = 365, ggtheme = theme_minimal(), risk.table.y.text.col = TRUE, risk.table.y.text = FALSE,censor=FALSE)
+  p=ggsurvplot(SURV,combine=TRUE,data=esets[["metabric"]],risk.table=TRUE,pval=TRUE,palette="dark2", title="Train Set \n Breast survival comparison", surv.scale="percent", conf.int=FALSE, xlab="time (days)", ylab="survival(%)", xlim=c(0,5500),break.time.by = 365, ggtheme = theme_minimal(), risk.table.y.text.col = TRUE, risk.table.y.text = FALSE,censor=FALSE)
   print(p)
 
 
@@ -274,7 +274,7 @@ for(i in 1:length(galgo)){
   assign(paste0("galgo",n), colfuncR(n)[as.numeric(as.factor(TrainClass[,paste(galgo[i],"Pred",sep=".")]))])
 }
 
-GalgoCols=do.call(cbind,mget(paste0("galgo",substr(galgo,1,1))))
+GalgoCols=do.call(cbind,mget(paste0("galgo",sub("\\_.*", "", galgo))))
 SignatureCols= data.frame(AIMSCol,pam50Col,scmCol,IntClustCol,endoCol,MammaCol,OncotypeCol)
 COLS=cbind(GalgoCols,SignatureCols)
 

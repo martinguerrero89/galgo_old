@@ -1,6 +1,6 @@
 library(GEOquery)
 
-source("Functions/functions.R")
+source("./Functions/functions.R")
 
 
 #GSE39582 dataset

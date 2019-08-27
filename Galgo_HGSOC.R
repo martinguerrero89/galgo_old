@@ -21,6 +21,7 @@ chrom_length= nrow(prob_matrix)   #length of chromosome
 
  dir.create(paste0("./Results/Results_",h),recursive=TRUE)
  resultdir=paste0("./Results/Results_",h)
+source("./Functions/functions.R")
  source("./Functions/Genetic_alg2.R")
 
 

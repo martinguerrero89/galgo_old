@@ -14,6 +14,7 @@
 #synapse get syn1757057 #survival (rbin)
 #synapse get syn1757055 #Disease free surv (rbin)
 
+source("./Functions/functions.R")
 
 metabric_files="./Data/Metabric/" #Directory where the files were downloaded" #Directory where the files were downloaded
 

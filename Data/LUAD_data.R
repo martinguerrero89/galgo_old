@@ -1,3 +1,5 @@
+source("./Functions/functions.R")
+
 #Centroids from Wilkerson et al.
 #Download from "http://cancer.unc.edu/nhayes/publications/adenocarcinoma.2012/wilkerson.2012.LAD.predictor.centroids.csv.zip"
 

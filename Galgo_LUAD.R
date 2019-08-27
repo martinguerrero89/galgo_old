@@ -22,6 +22,7 @@ chrom_length= nrow(prob_matrix)   #length of chromosome
 h="LUAD"
 dir.create(paste0("./Results/Results_",h),recursive=TRUE)
 resultdir=paste0("./Results/Results_",h)
+source("./Functions/functions.R")
 source("./Functions/geneticalg.R")
 
 

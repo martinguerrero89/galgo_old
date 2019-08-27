@@ -5,6 +5,7 @@
 library(MetaGxOvarian)
 library(consensusOV)
 
+source("./Functions/functions.R")
 #with OS status and grade according https://www.biorxiv.org/content/biorxiv/early/2016/05/12/052910.full.pdf
 datasets= c("PMID17290060","GSE9891","GSE8842","GSE51088","GSE49997","GSE32063","GSE32062","GSE30161","GSE30009","GSE26193","GSE18520","GSE17260","GSE14764","GSE13876","GSE26712","TCGAOVARIAN")
 platform= c("GPL96", "GPL570","GPL5689","GPL7264","GPL2986","GPL6480","GPL6480","GPL570","GPL13728","GPL570","GPL570","GPL6480","GPL96","GPL7759","GPL96","GPL3921")

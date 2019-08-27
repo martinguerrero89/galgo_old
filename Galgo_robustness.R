@@ -33,6 +33,8 @@ identical(colnames(prob_matrix),rownames(clinical))
 
 #RUN alg for 30 runs
 
+source("./Functions/functions.R")
+
 for(h in 1:30){
   dir.create(paste0("./Results/Results_",h),recursive=TRUE)
   resultdir=paste0("./Results/Results_",h)
